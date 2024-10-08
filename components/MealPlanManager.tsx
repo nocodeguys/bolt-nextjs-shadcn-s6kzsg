@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
@@ -51,11 +51,7 @@ export default function MealPlanManager() {
     },
   })
 
-  useEffect(() => {
-    calculateTotals(currentDay)
-  }, [meals, currentDay])
-
-  function calculateTotals(day: Meal['day']) {
+  const calculateTotals = useCallback((day: Meal['day']) => {
     const dayMeals = meals[day]
     const totalProtein = dayMeals.reduce((sum, meal) => sum + meal.protein, 0)
     const totalCarbs = dayMeals.reduce((sum, meal) => sum + meal.carbs, 0)
@@ -73,7 +69,11 @@ export default function MealPlanManager() {
       carbs: isNaN(carbsPercentage) ? 0 : carbsPercentage,
       fat: isNaN(fatPercentage) ? 0 : fatPercentage,
     })
-  }
+  }, [meals]) // meals is included in the dependency array
+
+  useEffect(() => {
+    calculateTotals(currentDay)
+  }, [calculateTotals, currentDay])
 
   function onSubmit(values: Meal) {
     setMeals(prevMeals => ({
